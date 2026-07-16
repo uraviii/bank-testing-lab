@@ -41,11 +41,16 @@ describe("money (pruebas unitarias)", () => {
     expect(applyFee(10000, 0)).toBe(10000);
   });
 
-  test.todo(
-    "computeInterest calcula el interes simple para 30 dias al 12% anual sobre 100000 centimos"
-  );
+  // Prueba propuesta 1
+  test("computeInterest calcula el interes simple para 30 dias al 12% anual", () => {
+  expect(
+    computeInterest(100000, 0.12, 30)
+  ).toBe(986);
+  });
 
-  test.todo(
-    "toCents redondea correctamente 19.999 a 2000 centimos y no a 1999"
-  );
+  // Prueba propuesta 2
+  test("toCents redondea 19.999 a 2000", () => {
+  expect(toCents(19.999)).toBe(2000);
+  });
+  
 });
