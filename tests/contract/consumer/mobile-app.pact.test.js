@@ -1,6 +1,6 @@
 const path = require("path");
 const { PactV3, MatchersV3 } = require("@pact-foundation/pact");
-const { like, integer, string } = MatchersV3;
+const { like, integer, string, eachLike } = MatchersV3;
 
 const provider = new PactV3({
   consumer: "AppMovilBanco",
@@ -165,6 +165,55 @@ describe("Contrato: AppMovilBanco consume ApiCuentasBancarias", () => {
     });
   });
 
+  test("POST /accounts/:id/deposit con un monto valido incrementa el saldo", async () => {
+  provider
+    .given("la cuenta 1 existe con saldo 1500")
+    .uponReceiving("una solicitud de deposito valido a la cuenta 1")
+    .withRequest({
+      method: "POST", path: "/accounts/1/deposit",
+      headers: { "Content-Type": "application/json" },
+      body: { amountCents: 500 },
+    })
+    .willRespondWith({
+      status: 200,
+      body: {
+        id: integer(1), owner: string("ClienteMovil"),
+        balance: integer(2000), currency: string("PEN"), status: string("active"),
+      },
+    });
+
+  await provider.executeTest(async (mockServer) => {
+    const res = await fetch(`${mockServer.url}/accounts/1/deposit`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amountCents: 500 }) });
+    expect(res.status).toBe(200);
+  });
+});
+
+test("GET /accounts devuelve un arreglo de cuentas", async () => {
+  provider
+    .given("existe al menos una cuenta")
+    .uponReceiving("una solicitud para listar las cuentas")
+    .withRequest({
+      method: "GET", path: "/accounts",
+    })
+    .willRespondWith({
+      status: 200,
+      body: eachLike({
+        id: integer(1), owner: string("ClienteMovil"),
+        balance: integer(0), currency: string("PEN"), status: string("active"),
+      }),
+    });
+
+  await provider.executeTest(async (mockServer) => {
+    const res = await fetch(`${mockServer.url}/accounts`);
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(Array.isArray(body)).toBe(true);
+  });
+});
+
+  /*
   test.todo(
     "POST /accounts/:id/deposit con un monto valido responde 200 y el saldo actualizado"
   );
@@ -172,4 +221,5 @@ describe("Contrato: AppMovilBanco consume ApiCuentasBancarias", () => {
   test.todo(
     "GET /accounts responde 200 con un arreglo de cuentas"
   );
+  */
 });
