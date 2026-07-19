@@ -1,4 +1,29 @@
 const { formatMoney, buildTransferReceipt } = require("../../src/services/money");
+/*
+const request = require("supertest");
+const { Pool } = require("pg");
+const { createApp } = require("../../src/app");
+
+const TEST_DATABASE_URL =
+  process.env.TEST_DATABASE_URL ||
+  "postgres://bankuser:bankpass@localhost:5433/bankdb_test";
+
+let pool;
+let app;
+
+beforeAll(() => {
+  pool = new Pool({ connectionString: TEST_DATABASE_URL });
+  app = createApp(pool);
+});
+
+afterAll(async () => {
+  await pool.end();
+});
+
+beforeEach(async () => {
+  await pool.query("TRUNCATE TABLE transfers, accounts RESTART IDENTITY CASCADE");
+});
+*/
 
 describe("Snapshot testing (formato y estructuras de salida)", () => {
   test("formatMoney con importe entero de soles", () => {
@@ -46,17 +71,45 @@ describe("Snapshot testing (formato y estructuras de salida)", () => {
   test("la forma del objeto de error HTTP se mantiene estable", () => {
     const errorBody = { error: "Fondos insuficientes" };
     expect(errorBody).toMatchInlineSnapshot(`
-{
-  "error": "Fondos insuficientes",
-}
-`);
+    {
+      "error": "Fondos insuficientes",
+    }
+    `);
   });
 
-  test.todo(
-    "capturar el snapshot del cuerpo de respuesta de POST /accounts usando property matchers para id y created_at"
-  );
+  //PRUEBA PROPUESTA 1
 
-  test.todo(
-    "capturar el snapshot de buildTransferReceipt para un monto con tres cifras de centimos redondeadas"
-  );
+  test("snapshot del cuerpo de POST /accounts usando property matchers para id y created_at", async () => {
+    const res = await request(app).post("/accounts").send({ owner: "Nina" });
+
+    expect(res.body).toMatchSnapshot({
+      id: expect.any(Number),
+      created_at: expect.any(String),
+    });
+  });
+
+    //PRUEBA PROPUESTA 2
+
+  test("buildTransferReceipt con un monto de tres cifras de centimos redondeadas", () => {
+    const receipt = buildTransferReceipt({
+      id: 3, fromOwner: "Elsa", toOwner: "Fer",
+      amountCents: 12345, currency: "PEN", reference: "PAGO-REDONDEO" });
+
+    expect(receipt).toMatchInlineSnapshot(`
+      {
+        "amount": "PEN 123.45",
+        "receiptId": 3,
+        "reference": "PAGO-REDONDEO",
+        "summary": "Elsa -> Fer",
+      }
+    `);
+  });
+
+  //test.todo(
+    //"capturar el snapshot del cuerpo de respuesta de POST /accounts usando property matchers para id y created_at"
+  //);
+
+  //test.todo(
+    //"capturar el snapshot de buildTransferReceipt para un monto con tres cifras de centimos redondeadas"
+  //);
 });
