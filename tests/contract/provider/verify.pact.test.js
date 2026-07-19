@@ -52,6 +52,7 @@ describe("Verificacion del proveedor ApiCuentasBancarias contra el contrato Pact
           Promise.resolve(),
         "la cuenta 1 tiene saldo insuficiente": () => Promise.resolve(),
         "la cuenta 1 existe": () => Promise.resolve(),
+        "existe al menos una cuenta": () => Promise.resolve(),
       },
     });
 
